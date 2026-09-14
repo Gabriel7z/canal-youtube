@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Episódio 1 · Cores do quintal — Oi, Rolo!</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="index.html">
+        <img src="imagens/logo-oi-rolo.png" alt="Logo Oi, Rolo!" />
+        Oi, Rolo!
+      </a>
+      <nav>
+        <a href="index.html">Canal</a>
+        <a class="agora" href="episodio-1.html">Episódio 1</a>
+        <a href="roteiros.html">Roteiros</a>
+        <a href="publicar.html">Publicar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap ep">
+    <h1>Cores do quintal</h1>
+    <p class="lead">
+      Aperte play, fale junto ou ligue a narração. Para o YouTube: deixe em tela cheia e grave a tela.
+    </p>
+
+    <div class="stage-wrap">
+      <div class="stage" id="palco">
+        <img id="cena" src="imagens/logo-oi-rolo.png" alt="Cena atual do episódio" />
+        <div class="caption">
+          <small id="rotulo">Abertura</small>
+          <p id="fala">Oi, Rolo! Vamos ver as cores do quintal?</p>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="play" type="button">Play</button>
+        <button class="btn ghost" id="voltar" type="button">Anterior</button>
+        <button class="btn ghost" id="avancar" type="button">Próxima</button>
+        <button class="btn ghost" id="voz" type="button">Narração: ligada</button>
+        <div class="progress" aria-hidden="true"><span id="barra"></span></div>
+      </div>
+    </div>
+
+    <h2>Letra original</h2>
+    <div class="letra">Amarelo é a manga
+Vermelho é o chão
+Verde é a folha
+Azul é o balão
+
+Rolo vai rolando
+pelo quintal
+cor de cá, cor de lá
+tudo é legal</div>
+  </main>
+
+  <script>
+    const cenas = [
+      { img: "imagens/logo-oi-rolo.png", rotulo: "Abertura", fala: "Oi, Rolo! Vamos ver as cores do quintal?", ms: 4000 },
+      { img: "imagens/cena-bom-dia.png", rotulo: "Bom dia", fala: "Bom dia, Rolo! O sol acordou no quintal.", ms: 4500 },
+      { img: "imagens/cenario-quintal.png", rotulo: "O quintal", fala: "Hoje a gente procura cores. Olha só o quintal!", ms: 4000 },
+      { img: "imagens/cena-amarelo.png", rotulo: "Amarelo", fala: "Amarelo é a manga! Pitanga achou no pé.", ms: 5000 },
+      { img: "imagens/cena-vermelho.png", rotulo: "Vermelho", fala: "Vermelho é a pitanga. Que frutinha brilhante!", ms: 5000 },
+      { img: "imagens/cena-verde.png", rotulo: "Verde", fala: "Verde é a folha da couve no canteiro.", ms: 5000 },
+      { img: "imagens/cena-azul.png", rotulo: "Azul", fala: "Azul é o balde. Azul também é o céu da Nena.", ms: 5000 },
+      { img: "imagens/cena-final-cores.png", rotulo: "Música", fala: "Amarelo é a manga, vermelho é o chão, verde é a folha, azul é o balão.", ms: 7000 },
+      { img: "imagens/rolo-bolinha.png", rotulo: "Giro", fala: "Rolo vai rolando pelo quintal. Cor de cá, cor de lá, tudo é legal!", ms: 6000 },
+      { img: "imagens/turma-completa.png", rotulo: "Tchau", fala: "Tchau, tchau! Até o próximo quintal.", ms: 5000 }
+    ];
+
+    const img = document.getElementById("cena");
+    const falaEl = document.getElementById("fala");
+    const rotuloEl = document.getElementById("rotulo");
+    const playBtn = document.getElementById("play");
+    const vozBtn = document.getElementById("voz");
+    const barra = document.getElementById("barra");
+    let i = 0;
+    let timer = null;
+    let tocando = false;
+    let narrar = true;
+
+    function pararFala() {
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    }
+
+    function falar(texto) {
+      pararFala();
+      if (!narrar || !window.speechSynthesis) return;
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = "pt-BR";
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      const vozes = speechSynthesis.getVoices();
+      const br = vozes.find((v) => v.lang === "pt-BR") || vozes.find((v) => v.lang && v.lang.startsWith("pt"));
+      if (br) u.voice = br;
+      speechSynthesis.speak(u);
+    }
+
+    function mostrar(n) {
+      i = (n + cenas.length) % cenas.length;
+      const c = cenas[i];
+      img.src = c.img;
+      img.alt = c.fala;
+      falaEl.textContent = c.fala;
+      rotuloEl.textContent = c.rotulo + " · " + (i + 1) + "/" + cenas.length;
+      barra.style.width = ((i + 1) / cenas.length) * 100 + "%";
+      if (tocando) falar(c.fala);
+    }
+
+    function proxima() {
+      if (i >= cenas.length - 1) {
+        parar();
+        return;
+      }
+      mostrar(i + 1);
+      if (tocando) agendar();
+    }
+
+    function agendar() {
+      clearTimeout(timer);
+      timer = setTimeout(proxima, cenas[i].ms);
+    }
+
+    function play() {
+      tocando = true;
+      playBtn.textContent = "Pausar";
+      falar(cenas[i].fala);
+      agendar();
+    }
+
+    function parar() {
+      tocando = false;
+      playBtn.textContent = "Play";
+      clearTimeout(timer);
+      pararFala();
+    }
+
+    playBtn.addEventListener("click", () => (tocando ? parar() : play()));
+    document.getElementById("avancar").addEventListener("click", () => {
+      clearTimeout(timer);
+      mostrar(i + 1);
+      if (tocando) agendar();
+    });
+    document.getElementById("voltar").addEventListener("click", () => {
+      clearTimeout(timer);
+      mostrar(i - 1);
+      if (tocando) agendar();
+    });
+    vozBtn.addEventListener("click", () => {
+      narrar = !narrar;
+      vozBtn.textContent = narrar ? "Narração: ligada" : "Narração: desligada";
+      if (!narrar) pararFala();
+    });
+
+    if (window.speechSynthesis) {
+      speechSynthesis.getVoices();
+      speechSynthesis.addEventListener("voiceschanged", () => speechSynthesis.getVoices());
+    }
+    mostrar(0);
+  </script>
+</body>
+</html>
